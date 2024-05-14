@@ -59,7 +59,7 @@ func main() {
 			"-i", originalVideoUrl,
 			"-c:v", "copy",
 			"-c:a", "aac",
-			"-strict", "experimental",
+			// "-strict", "experimental",
 			// "-c:v", "libx264",
 			// "-preset", "ultrafast",
 			// "-crf", "28",
