@@ -43,8 +43,8 @@ func main() {
 		// 	OverWriteOutput().ErrorToStdOut().Run()
 
 		cmd := exec.Command(
-			"ffmpeg", originalVideoUrl,
-			"-i",
+			"ffmpeg",
+			"-i", originalVideoUrl,
 			"-c:v", "copy",
 			"-c:a", "aac",
 			"-strict", "experimental",
