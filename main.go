@@ -48,16 +48,28 @@ func main() {
 		cmd := exec.Command(
 			"ffmpeg",
 			"-i", originalVideoUrl,
-			"-c:v", "copy",
-			"-c:a", "aac",
-			"-preset", "ultrafast",
-			"-crf", "28",
+			"-r", "30",
+
+			/*Failed attempts*/
+
+			// "-map", "0",
+			// "-map", "0:a",
+			// "-map", "0:v",
+			// "-c", "copy",
+
+			// "-c:v", "libx264",
+			// "-c:a", "aac",
+			// "-preset", "ultrafast",
+			// "-crf", "28",
+
 			outputPath,
 		)
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 		err := cmd.Run()
 		if err != nil {
+			fmt.Println(stdoutBuf.String())
+			fmt.Println(stderrBuf.String())
 			return err
 		}
 
