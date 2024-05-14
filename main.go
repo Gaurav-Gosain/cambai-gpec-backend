@@ -43,10 +43,11 @@ func main() {
 		// 	OverWriteOutput().ErrorToStdOut().Run()
 
 		cmd := exec.Command("ffmpeg", "-i", originalVideoUrl, outputPath)
-		_, err := cmd.Output()
+		res, err := cmd.Output()
 		if err != nil {
 			return err
 		}
+		fmt.Println(res, err.Error())
 
 		record := e.Record
 		record.Set("original_video", outputFileName)
