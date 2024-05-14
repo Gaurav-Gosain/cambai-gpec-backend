@@ -16,23 +16,6 @@ func main() {
 
 	// fires only for the "dubbing" collection
 	app.OnRecordAfterCreateRequest("dubbing").Add(func(e *core.RecordCreateEvent) error {
-		originalVideos := e.UploadedFiles["original_video"]
-
-		if len(originalVideos) == 0 {
-			return errors.New("video not uploaded")
-		}
-
-		originalVideo := originalVideos[0]
-
-		originalVideoUrl := fmt.Sprintf("pb_data/storage/%s/%s/%s", e.Collection.Id, e.Record.Id, originalVideo.Name)
-
-		if _, err := os.Stat(originalVideoUrl); err != nil {
-			return err
-		}
-
-		outputPath := originalVideoUrl + ".mp4"
-		outputFileName := originalVideo.Name + ".mp4"
-
 		// err := ffmpeg.Input(originalVideoUrl).
 		// 	Output(
 		// 		outputPath,
@@ -41,33 +24,52 @@ func main() {
 		// 		// ffmpeg.KwArgs{"strict": "experimental"},
 		// 	).
 		// 	OverWriteOutput().ErrorToStdOut().Run()
+		go func(e *core.RecordCreateEvent) error {
+			originalVideos := e.UploadedFiles["original_video"]
 
-		cmd := exec.Command(
-			"ffmpeg",
-			"-i", originalVideoUrl,
-			"-c:v", "copy",
-			"-c:a", "aac",
-			"-strict", "experimental",
-			outputPath,
-		)
-		_, err := cmd.Output()
-		if err != nil {
-			return err
-		}
+			if len(originalVideos) == 0 {
+				return errors.New("video not uploaded")
+			}
 
-		record := e.Record
-		record.Set("original_video", outputFileName)
+			originalVideo := originalVideos[0]
 
-		err = app.Dao().SaveRecord(record)
-		if err != nil {
-			return err
-		}
+			originalVideoUrl := fmt.Sprintf("pb_data/storage/%s/%s/%s", e.Collection.Id, e.Record.Id, originalVideo.Name)
 
-		// delete the originalVideoUrl
-		err = os.Remove(originalVideoUrl)
-		if err != nil {
+			if _, err := os.Stat(originalVideoUrl); err != nil {
+				return err
+			}
+
+			outputPath := originalVideoUrl + ".mp4"
+			outputFileName := originalVideo.Name + ".mp4"
+			cmd := exec.Command(
+				"ffmpeg",
+				"-i", originalVideoUrl,
+				"-c:v", "copy",
+				"-c:a", "aac",
+				"-strict", "experimental",
+				outputPath,
+			)
+			_, err := cmd.Output()
+			if err != nil {
+				return err
+			}
+
+			record := e.Record
+			record.Set("original_video", outputFileName)
+
+			err = app.Dao().SaveRecord(record)
+			if err != nil {
+				return err
+			}
+
+			// delete the originalVideoUrl
+			err = os.Remove(originalVideoUrl)
+			if err != nil {
+				return err
+			}
+
 			return nil
-		}
+		}(e)
 
 		return nil
 	})
