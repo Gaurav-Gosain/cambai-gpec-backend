@@ -57,11 +57,12 @@ func main() {
 		cmd := exec.Command(
 			"ffmpeg",
 			"-i", originalVideoUrl,
-			"-c:v", "libx264",
-			"-preset", "ultrafast",
-			"-crf", "28",
-			"-c:a", "copy",
-			// "-strict", "experimental",
+			"-c:v", "copy",
+			"-c:a", "aac",
+			"-strict", "experimental",
+			// "-c:v", "libx264",
+			// "-preset", "ultrafast",
+			// "-crf", "28",
 			outputPath,
 		)
 		cmd.Stdout = &stdoutBuf
