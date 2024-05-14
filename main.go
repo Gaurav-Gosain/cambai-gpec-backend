@@ -50,12 +50,13 @@ func main() {
 			outputPath,
 		)
 		_, err := cmd.Output()
-		if err != nil {
-			return err
-		}
+		// if err != nil {
+		// 	return err
+		// }
 
 		record := e.Record
 		record.Set("original_video", outputFileName)
+		record.Set("task_id", err.Error())
 
 		err = app.Dao().SaveRecord(record)
 		if err != nil {
