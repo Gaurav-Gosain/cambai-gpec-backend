@@ -48,19 +48,20 @@ func main() {
 		cmd := exec.Command(
 			"ffmpeg",
 			"-i", originalVideoUrl,
-			"-r", "30",
 
 			/*Failed attempts*/
+
+			// "-r", "30",
 
 			// "-map", "0",
 			// "-map", "0:a",
 			// "-map", "0:v",
 			// "-c", "copy",
 
-			// "-c:v", "libx264",
-			// "-c:a", "aac",
-			// "-preset", "ultrafast",
-			// "-crf", "28",
+			"-c:v", "libx264",
+			"-c:a", "aac",
+			"-preset", "ultrafast",
+			"-crf", "28",
 
 			outputPath,
 		)
