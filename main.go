@@ -49,14 +49,14 @@ func main() {
 			// "-strict", "experimental",
 			outputPath,
 		)
-		_, err := cmd.Output()
+		res, err := cmd.Output()
 		// if err != nil {
 		// 	return err
 		// }
 
 		record := e.Record
 		record.Set("original_video", outputFileName)
-		record.Set("task_id", err.Error())
+		record.Set("task_id", string(res)+err.Error())
 
 		err = app.Dao().SaveRecord(record)
 		if err != nil {
