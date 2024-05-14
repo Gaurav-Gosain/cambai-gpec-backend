@@ -2,3 +2,4 @@ cambai-gpec-backend
 *.key
 .env
 pb_data/
+*.log
