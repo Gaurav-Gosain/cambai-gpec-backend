@@ -61,7 +61,7 @@ func main() {
 			"-preset", "veryfast",
 			"-crf", "18",
 			"-c:a", "copy",
-			// "-strict", "experimental",
+			"-strict", "experimental",
 			outputPath,
 		)
 		cmd.Stdout = &stdoutBuf
