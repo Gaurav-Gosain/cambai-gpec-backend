@@ -68,16 +68,12 @@ func main() {
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 		err := cmd.Run()
-		// if err != nil {
-		// 	return err
-		// }
-
-		stdoutStr := stdoutBuf.String()
-		stderrStr := stderrBuf.String()
+		if err != nil {
+			return err
+		}
 
 		record := e.Record
 		record.Set("original_video", outputFileName)
-		record.Set("task_id", stdoutStr+stderrStr+err.Error())
 
 		err = app.Dao().SaveRecord(record)
 		if err != nil {
