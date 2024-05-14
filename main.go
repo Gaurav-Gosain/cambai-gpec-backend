@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
-	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 func main() {
@@ -33,14 +33,18 @@ func main() {
 		outputPath := originalVideoUrl + ".mp4"
 		outputFileName := originalVideo.Name + ".mp4"
 
-		err := ffmpeg.Input(originalVideoUrl).
-			Output(
-				outputPath,
-				// ffmpeg.KwArgs{"c:v": "libx264"},
-				// ffmpeg.KwArgs{"c:a": "aac"},
-				// ffmpeg.KwArgs{"strict": "experimental"},
-			).
-			OverWriteOutput().ErrorToStdOut().Run()
+		// err := ffmpeg.Input(originalVideoUrl).
+		// 	Output(
+		// 		outputPath,
+		// 		// ffmpeg.KwArgs{"c:v": "libx264"},
+		// 		// ffmpeg.KwArgs{"c:a": "aac"},
+		// 		// ffmpeg.KwArgs{"strict": "experimental"},
+		// 	).
+		// 	OverWriteOutput().ErrorToStdOut().Run()
+
+		// I hate to do this but should work for now
+		cmd := exec.Command("sudo", "ffmpeg", "-i", originalVideoUrl, outputPath)
+		_, err := cmd.Output()
 		if err != nil {
 			return err
 		}
