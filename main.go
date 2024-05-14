@@ -45,7 +45,7 @@ func main() {
 			"ffmpeg",
 			"-i", originalVideoUrl,
 			"-c:v", "copy",
-			"-c:a", "aac",
+			"-c:a", "copy",
 			// "-strict", "experimental",
 			outputPath,
 		)
