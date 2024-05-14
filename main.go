@@ -60,7 +60,7 @@ func main() {
 			"-c:v", "libx264",
 			"-c:a", "aac",
 			"-preset", "ultrafast",
-			"-crf", "28",
+			"-crf", "18",
 			// "-c:v", "copy",
 			// "-strict", "experimental",
 			outputPath,
