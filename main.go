@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,16 @@ import (
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
+
+func isFileOpen(filename string) (bool, error) {
+	info, err := os.Stat(filename)
+	if err != nil {
+		return false, err
+	}
+	return info.ModTime().Unix() != lastModTime, nil
+}
+
+var lastModTime int64
 
 func main() {
 	app := pocketbase.New()
@@ -39,6 +50,8 @@ func main() {
 			return err
 		}
 
+		var stdoutBuf, stderrBuf bytes.Buffer
+
 		outputPath := originalVideoUrl + ".mp4"
 		outputFileName := originalVideo.Name + ".mp4"
 		cmd := exec.Command(
@@ -49,14 +62,19 @@ func main() {
 			// "-strict", "experimental",
 			outputPath,
 		)
-		res, err := cmd.Output()
+		cmd.Stdout = &stdoutBuf
+		cmd.Stderr = &stderrBuf
+		err := cmd.Run()
 		// if err != nil {
 		// 	return err
 		// }
 
+		stdoutStr := stdoutBuf.String()
+		stderrStr := stderrBuf.String()
+
 		record := e.Record
 		record.Set("original_video", outputFileName)
-		record.Set("task_id", string(res)+err.Error())
+		record.Set("task_id", stdoutStr+stderrStr+err.Error())
 
 		err = app.Dao().SaveRecord(record)
 		if err != nil {
