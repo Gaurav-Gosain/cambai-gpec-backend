@@ -27,15 +27,6 @@ func main() {
 
 	// fires only for the "dubbing" collection
 	app.OnRecordAfterCreateRequest("dubbing").Add(func(e *core.RecordCreateEvent) error {
-		// err := ffmpeg.Input(originalVideoUrl).
-		// 	Output(
-		// 		outputPath,
-		// 		// ffmpeg.KwArgs{"c:v": "libx264"},
-		// 		// ffmpeg.KwArgs{"c:a": "aac"},
-		// 		// ffmpeg.KwArgs{"strict": "experimental"},
-		// 	).
-		// 	OverWriteOutput().ErrorToStdOut().Run()
-		// go func(e *core.RecordCreateEvent) error {
 		originalVideos := e.UploadedFiles["original_video"]
 
 		if len(originalVideos) == 0 {
@@ -61,8 +52,6 @@ func main() {
 			"-c:a", "aac",
 			"-preset", "ultrafast",
 			"-crf", "28",
-			// "-c:v", "copy",
-			// "-strict", "experimental",
 			outputPath,
 		)
 		cmd.Stdout = &stdoutBuf
@@ -85,9 +74,6 @@ func main() {
 		if err != nil {
 			return err
 		}
-
-		// 	return nil
-		// }(e)
 
 		return nil
 	})
