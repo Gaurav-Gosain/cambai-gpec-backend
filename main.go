@@ -8,22 +8,16 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/gaurav-gosain/cambai-gpec-backend/camb"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
 
-func isFileOpen(filename string) (bool, error) {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return false, err
-	}
-	return info.ModTime().Unix() != lastModTime, nil
-}
-
-var lastModTime int64
-
 func main() {
 	app := pocketbase.New()
+
+	cambApi := camb.Init()
 
 	// fires only for the "dubbing" collection
 	app.OnRecordAfterCreateRequest("dubbing").Add(func(e *core.RecordCreateEvent) error {
@@ -58,6 +52,8 @@ func main() {
 			// "-map", "0:v",
 			// "-c", "copy",
 
+			/*****************/
+
 			"-c:v", "libx264",
 			"-c:a", "aac",
 			"-preset", "ultrafast",
@@ -87,6 +83,36 @@ func main() {
 		if err != nil {
 			return err
 		}
+
+		// expand the "user" relation
+		if errs := app.Dao().ExpandRecord(record, []string{"user"}, nil); len(errs) > 0 {
+			return fmt.Errorf("failed to expand: %v", errs)
+		}
+
+		userRecord := record.ExpandedOne("user")
+
+		// fileDownloadToken, err := tokens.NewRecordFileToken(app, userRecord)
+		// if err != nil {
+		// 	return err
+		// }
+
+		downloadFileURL := fmt.Sprintf(
+			"%s/api/files/%s/%s",
+			// "%s/api/files/%s/%s?token=%s",
+			app.Settings().Meta.AppUrl,
+			record.BaseFilesPath(),
+			outputFileName,
+			// fileDownloadToken,
+		)
+
+		fmt.Println(downloadFileURL)
+
+		go cambApi.StartDubbingPipeline(
+			app,
+			record,
+			userRecord.GetString("email"),
+			downloadFileURL,
+		)
 
 		return nil
 	})
