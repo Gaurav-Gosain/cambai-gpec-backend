@@ -33,7 +33,7 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
             <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin-top:32px">
               <tbody>
                 <tr>
-                  <td><img alt="Camb AI" src="https://gpec.gauravgosain.dev/assets/camb_logo.png" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;border-radius:10px" width="180" /></td>
+                  <td><img alt="Camb AI" src="https://gpec.gauravgosain.dev/assets/camb_logo.png" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;background-color:white;padding:4px" width="180" /></td>
                 </tr>
               </tbody>
             </table>
