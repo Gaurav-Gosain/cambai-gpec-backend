@@ -2,10 +2,14 @@ package camb
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"os/exec"
 	"text/template"
 
 	"github.com/pocketbase/pocketbase"
@@ -85,6 +89,74 @@ type RunInfoResponse struct {
 	AudioURL string `json:"audio_url"` // The URL to download the audio
 }
 
+func GenerateAudioWaveform(videoPath string) (string, error) {
+	tempFile, err := os.CreateTemp("", "output-*.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tempFile.Name()) // Clean up the temp file afterwards
+
+	// Build the FFmpeg command
+	cmd := exec.Command("ffmpeg", "-i", videoPath, "-filter_complex", "showwavespic=s=500x500,scale=500:500:force_original_aspect_ratio=decrease,pad=500:500:(ow-iw)/2:(oh-ih)/2", "-frames:v", "1", tempFile.Name())
+
+	// Run the FFmpeg command
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
+	}
+
+	// Read the generated image file
+	imageData, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		log.Fatal(err)
+		return "", nil
+	}
+
+	// Encode the image data to base64
+	base64Data := base64.StdEncoding.EncodeToString(imageData)
+
+	// Create a base64 URL
+	base64URL := "data:image/png;base64," + base64Data
+
+	return base64URL, nil
+}
+
+func GenerateVideoThumbnail(videoPath string) (string, error) {
+	tempFile, err := os.CreateTemp("", "output-*.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tempFile.Name()) // Clean up the temp file afterwards
+
+	// Build the FFmpeg command
+	cmd := exec.Command("ffmpeg", "-i", videoPath, "-vf", "\"crop='min(iw,ih)':'min(iw,ih)',scale=500:500\"", "-frames:v", "1", tempFile.Name())
+
+	// Run the FFmpeg command
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
+	}
+
+	// Read the generated image file
+	imageData, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		log.Fatal(err)
+		return "", nil
+	}
+
+	// Encode the image data to base64
+	base64Data := base64.StdEncoding.EncodeToString(imageData)
+
+	// Create a base64 URL
+	base64URL := "data:image/png;base64," + base64Data
+
+	return base64URL, nil
+}
+
 // Sends an email to the user with the download links for the dubbed video
 func (c *Camb) SendEmail(
 	app *pocketbase.PocketBase,
@@ -93,7 +165,6 @@ func (c *Camb) SendEmail(
 	record *models.Record,
 	userName string,
 ) (apiResponse RunInfoResponse, err error) {
-
 	req, err := http.NewRequest(
 		"GET",
 		c.API(fmt.Sprintf("/dubbed_run_info/%d", run.RunID)),
@@ -133,10 +204,19 @@ func (c *Camb) SendEmail(
 	resendClient := resend.NewClient(c.ResendAPIKey)
 
 	t, err := template.New("webpage").Parse(EMAIL_TEMPLATE)
-
 	if err != nil {
 		return
 	}
+
+	originalVideoURL := fmt.Sprintf(
+		"pb_data/storage/%s/%s/%s",
+		record.Collection().Id,
+		record.Id,
+		record.GetString("original_video"),
+	)
+
+	thumbnail, _ := GenerateVideoThumbnail(originalVideoURL)
+	audioWaveform, _ := GenerateVideoThumbnail(originalVideoURL)
 
 	data := struct {
 		UserName          string
@@ -146,8 +226,8 @@ func (c *Camb) SendEmail(
 		AudioDownloadLink string
 	}{
 		UserName:          userName,
-		VideoThumbnail:    "VideoThumbnail", // TODO: Get the video thumbnail
-		AudioWaveform:     "AudioWaveform",  // TODO: Get the audio waveform
+		VideoThumbnail:    thumbnail,
+		AudioWaveform:     audioWaveform,
 		VideoDownloadLink: apiResponse.VideoURL,
 		AudioDownloadLink: apiResponse.AudioURL,
 	}
@@ -170,6 +250,10 @@ func (c *Camb) SendEmail(
 
 	// https://demo.react.email/preview/notifications/vercel-invite-user
 	// https://stackoverflow.com/questions/32254818/generating-a-waveform-using-ffmpeg
+
+	// ffmpeg -i gauravgosain01@gmail.com.webm -filter_complex "showwavespic=s=500x500,scale=500:500:force_original_aspect_ratio=decrease,pad=500:500:(ow-iw)/2:(oh-ih)/2" -frames:v 1 output.png
+
+	// ffmpeg -i ack@camb.ai.webm -vf "crop='min(iw,ih)':'min(iw,ih)',scale=500:500" -frames:v 1 output.png
 
 	_, err = resendClient.Emails.Send(params)
 	if err != nil {
@@ -196,7 +280,6 @@ func (c *Camb) SendEmailTest(
 	resendClient := resend.NewClient(c.ResendAPIKey)
 
 	t, err := template.New("webpage").Parse(EMAIL_TEMPLATE)
-
 	if err != nil {
 		return
 	}
@@ -239,6 +322,4 @@ func (c *Camb) SendEmailTest(
 		fmt.Println(err.Error())
 		return
 	}
-
-	return
 }

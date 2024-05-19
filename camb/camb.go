@@ -10,15 +10,15 @@ import (
 )
 
 type Camb struct {
-	URL    string
-	APIKey string
+	URL          string
+	APIKey       string
 	ResendAPIKey string
 }
 
 func Init() Camb {
 	return Camb{
-		URL:    "https://client.camb.ai/apis",
-		APIKey: os.Getenv("CAMB_API_KEY"),
+		URL:          "https://client.camb.ai/apis",
+		APIKey:       os.Getenv("CAMB_API_KEY"),
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
 	}
 }
