@@ -52,6 +52,8 @@ func (c *Camb) StartDubbingPipeline(
 
 	var statusResp StatusResponse
 
+	foundRunID := false
+
 	for {
 
 		statusResp, err = c.DubbingStatus(dubbingResp)
@@ -59,6 +61,11 @@ func (c *Camb) StartDubbingPipeline(
 			record.Set("status", "Error getting task status")
 			app.Dao().SaveRecord(record)
 			return
+		} else if (statusResp.RunID != 0) && !foundRunID {
+			record.Set("status", "The video is being dubbed, once complete will be sent to "+email)
+			record.Set("run_id", statusResp.RunID)
+			foundRunID = true
+			app.Dao().SaveRecord(record)
 		}
 
 		fmt.Println("Polling status:", statusResp)
@@ -69,8 +76,6 @@ func (c *Camb) StartDubbingPipeline(
 
 		time.Sleep(1 * time.Second)
 	}
-
-	record.Set("run_id", statusResp.RunID)
 
 	app.Dao().SaveRecord(record)
 
