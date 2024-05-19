@@ -123,7 +123,7 @@ func GenerateVideoThumbnail(videoPath string) (string, error) {
 	outputPath := videoPath + "_thumbnail.png"
 
 	// Build the FFmpeg command
-	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-vf", "\"crop='min(iw,ih)':'min(iw,ih)',scale=500:500\"", "-frames:v", "1", outputPath)
+	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=500:500", "-frames:v", "1", outputPath)
 
 	// Run the FFmpeg command
 	var stderr bytes.Buffer
