@@ -111,12 +111,14 @@ func main() {
 			app,
 			record,
 			userRecord.GetString("email"),
+			userRecord.GetString("name"),
 			downloadFileURL,
 		)
 
 		return nil
 	})
 
+	// Event handler to delete associated file system data after a record is deleted from the "dubbing" collection.
 	app.OnRecordAfterDeleteRequest("dubbing").Add(func(e *core.RecordDeleteEvent) error {
 		recordData := fmt.Sprintf("pb_data/storage/%s/%s", e.Collection.Id, e.Record.Id)
 

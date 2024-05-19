@@ -5,6 +5,7 @@ go 1.22.3
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/pocketbase/pocketbase v0.22.12
+	github.com/resend/resend-go/v2 v2.6.0
 )
 
 require (
