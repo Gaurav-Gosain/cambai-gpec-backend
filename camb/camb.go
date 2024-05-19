@@ -12,12 +12,14 @@ import (
 type Camb struct {
 	URL    string
 	APIKey string
+	ResendAPIKey string
 }
 
 func Init() Camb {
 	return Camb{
 		URL:    "https://client.camb.ai/apis",
 		APIKey: os.Getenv("CAMB_API_KEY"),
+		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
 	}
 }
 
@@ -29,6 +31,7 @@ func (c *Camb) StartDubbingPipeline(
 	app *pocketbase.PocketBase,
 	record *models.Record,
 	email string,
+	userName string,
 	VideoURL string,
 ) {
 	dubbingResp, err := c.StartDubbing(StartDubbingRequestBody{
@@ -71,5 +74,5 @@ func (c *Camb) StartDubbingPipeline(
 
 	app.Dao().SaveRecord(record)
 
-	c.SendEmail(app, email, statusResp, record)
+	c.SendEmail(app, email, statusResp, record, userName)
 }
