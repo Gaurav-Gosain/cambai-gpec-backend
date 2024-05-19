@@ -13,7 +13,7 @@ import (
 	"github.com/resend/resend-go/v2"
 )
 
-const EMAIL_TEMPLATE=`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html dir="ltr" lang="en">
 
   <head>
@@ -31,7 +31,7 @@ const EMAIL_TEMPLATE=`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional/
             <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin-top:32px">
               <tbody>
                 <tr>
-                  <td><img alt="Camb AI" height="37" src="https://raw.githubusercontent.com/cr2007/cambai-gpec-backend/resend-email-integration/assets/camb_logo.svg" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;border-radius:10px" width="120" /></td>
+                  <td><img alt="Camb AI" height="37" src="https://raw.githubusercontent.com/Gaurav-Gosain/cambai-gpec-backend/master/assets/camb_logo.svg" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;border-radius:10px" width="120" /></td>
                 </tr>
               </tbody>
             </table>
@@ -138,16 +138,16 @@ func (c *Camb) SendEmail(
 		return
 	}
 
-	data := struct{
-		UserName string
-		VideoThumbnail string
-		AudioWaveform string
+	data := struct {
+		UserName          string
+		VideoThumbnail    string
+		AudioWaveform     string
 		VideoDownloadLink string
 		AudioDownloadLink string
 	}{
-		UserName: userName,
-		VideoThumbnail: "VideoThumbnail", // TODO: Get the video thumbnail
-		AudioWaveform: "AudioWaveform",   // TODO: Get the audio waveform
+		UserName:          userName,
+		VideoThumbnail:    "VideoThumbnail", // TODO: Get the video thumbnail
+		AudioWaveform:     "AudioWaveform",  // TODO: Get the audio waveform
 		VideoDownloadLink: apiResponse.VideoURL,
 		AudioDownloadLink: apiResponse.AudioURL,
 	}
@@ -161,9 +161,9 @@ func (c *Camb) SendEmail(
 	htmlString := htmlBuffer.String()
 
 	params := &resend.SendEmailRequest{
-		From: "camb.ai <help@camb.ai>",
-		To: []string{email},
-		Html: htmlString,
+		From:    "camb.ai <help@camb.ai>",
+		To:      []string{email},
+		Html:    htmlString,
 		Subject: "Download your Dubbed Video! (CAMB.AI x GPEC)",
 		ReplyTo: "help@camb.ai",
 	}
@@ -174,11 +174,11 @@ func (c *Camb) SendEmail(
 	_, err = resendClient.Emails.Send(params)
 	if err != nil {
 		fmt.Println(err.Error())
-		record.Set("status", "Failed to send download email to " + email)
+		record.Set("status", "Failed to send download email to "+email)
 		app.Dao().SaveRecord(record)
 		return
 	}
-	
+
 	record.Set("status", "Download links sent to "+email)
 	app.Dao().SaveRecord(record)
 
@@ -192,7 +192,7 @@ func (c *Camb) SendEmailTest(
 	AudioWaveform string,
 	VideoDownloadLink string,
 	AudioDownloadLink string,
-) () {
+) {
 	resendClient := resend.NewClient(c.ResendAPIKey)
 
 	t, err := template.New("webpage").Parse(EMAIL_TEMPLATE)
@@ -201,16 +201,16 @@ func (c *Camb) SendEmailTest(
 		return
 	}
 
-	data := struct{
-		UserName string
-		VideoThumbnail string
-		AudioWaveform string
+	data := struct {
+		UserName          string
+		VideoThumbnail    string
+		AudioWaveform     string
 		VideoDownloadLink string
 		AudioDownloadLink string
 	}{
-		UserName: UserName,
-		VideoThumbnail: VideoThumbnail,
-		AudioWaveform: AudioWaveform,
+		UserName:          UserName,
+		VideoThumbnail:    VideoThumbnail,
+		AudioWaveform:     AudioWaveform,
 		VideoDownloadLink: VideoDownloadLink,
 		AudioDownloadLink: AudioDownloadLink,
 	}
@@ -224,9 +224,9 @@ func (c *Camb) SendEmailTest(
 	htmlString := htmlBuffer.String()
 
 	params := &resend.SendEmailRequest{
-		From: "camb.ai <help@camb.ai>",
-		To: []string{email},
-		Html: htmlString,
+		From:    "camb.ai <help@camb.ai>",
+		To:      []string{email},
+		Html:    htmlString,
 		Subject: "Download your Dubbed Video! (CAMB.AI x GPEC)",
 		ReplyTo: "help@camb.ai",
 	}
@@ -239,6 +239,6 @@ func (c *Camb) SendEmailTest(
 		fmt.Println(err.Error())
 		return
 	}
-	
+
 	return
 }
