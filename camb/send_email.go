@@ -2,15 +2,13 @@ package camb
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
-	"text/template"
+	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/models"
@@ -23,8 +21,8 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   </head>
 
   <body style="background-color:rgb(255,255,255);margin-top:auto;margin-bottom:auto;margin-left:auto;margin-right:auto;font-family:Urbanist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, &quot;Noto Sans&quot;, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;;padding-left:0.5rem;padding-right:0.5rem">
@@ -35,13 +33,12 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
             <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin-top:32px">
               <tbody>
                 <tr>
-                  <td><img alt="Camb AI" height="37" src="https://raw.githubusercontent.com/Gaurav-Gosain/cambai-gpec-backend/master/assets/camb_logo.svg" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;border-radius:10px" width="120" /></td>
+                  <td><img alt="Camb AI" height="37" src="https://gpec.gauravgosain.dev/assets/camb_logo.png" style="display:block;outline:none;border:none;text-decoration:none;margin-top:0px;margin-bottom:0px;margin-left:auto;margin-right:auto;border-radius:10px" width="120" /></td>
                 </tr>
               </tbody>
             </table>
             <p style="font-size:14px;line-height:24px;margin:16px 0;color:rgb(0,0,0)">Hello <!-- -->{{ .UserName }}<!-- -->,</p>
             <p style="font-size:14px;line-height:24px;margin:16px 0;color:rgb(0,0,0)">Here is your dubbed video powered by <strong>Camb AI</strong>.</p>
-            <!-- Circled images -->
             <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation">
               <tbody>
                 <tr>
@@ -49,11 +46,8 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
                     <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation">
                       <tbody style="width:100%">
                         <tr style="width:100%">
-                          <!-- Video Thumbnail -->
                           <td align="right" data-id="__react-email-column"><img height="64" alt="Video Thumbnail" src="{{ .VideoThumbnail }}" width="64" /></td>
                           <td align="center" data-id="__react-email-column" style="width:20px"></td>
-
-                          <!-- Audio Waveform -->
                           <td align="left" data-id="__react-email-column"><img height="64" alt="Audio Waveform" src="{{ .AudioWaveform }}" width="64" /></td>
                         </tr>
                       </tbody>
@@ -63,7 +57,6 @@ const EMAIL_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitiona
               </tbody>
             </table>
 
-            <!-- Download Buttons -->
             <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="text-align:center;margin-top:32px;margin-bottom:32px">
               <tbody>
                 <tr>
@@ -103,20 +96,9 @@ func GenerateAudioWaveform(videoPath string) (string, error) {
 		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
 	}
 
-	// Read the generated image file
-	imageData, err := os.ReadFile(outputPath)
-	if err != nil {
-		log.Fatal(err)
-		return "", nil
-	}
+	parts := strings.Split(outputPath, "/")
 
-	// Encode the image data to base64
-	base64Data := base64.StdEncoding.EncodeToString(imageData)
-
-	// Create a base64 URL
-	base64URL := "data:image/png;base64," + base64Data
-
-	return base64URL, nil
+	return parts[len(parts)-1], nil
 }
 
 func GenerateVideoThumbnail(videoPath string) (string, error) {
@@ -133,20 +115,9 @@ func GenerateVideoThumbnail(videoPath string) (string, error) {
 		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
 	}
 
-	// Read the generated image file
-	imageData, err := os.ReadFile(outputPath)
-	if err != nil {
-		log.Fatal(err)
-		return "", nil
-	}
+	parts := strings.Split(outputPath, "/")
 
-	// Encode the image data to base64
-	base64Data := base64.StdEncoding.EncodeToString(imageData)
-
-	// Create a base64 URL
-	base64URL := "data:image/png;base64," + base64Data
-
-	return base64URL, nil
+	return parts[len(parts)-1], nil
 }
 
 // Sends an email to the user with the download links for the dubbed video
@@ -195,11 +166,6 @@ func (c *Camb) SendEmail(
 
 	resendClient := resend.NewClient(c.ResendAPIKey)
 
-	t, err := template.New("webpage").Parse(EMAIL_TEMPLATE)
-	if err != nil {
-		return
-	}
-
 	originalVideoURL := fmt.Sprintf(
 		"pb_data/storage/%s/%s/%s",
 		record.Collection().Id,
@@ -208,29 +174,24 @@ func (c *Camb) SendEmail(
 	)
 
 	thumbnail, _ := GenerateVideoThumbnail(originalVideoURL)
-	audioWaveform, _ := GenerateVideoThumbnail(originalVideoURL)
+	audioWaveform, _ := GenerateAudioWaveform(originalVideoURL)
 
-	data := struct {
-		UserName          string
-		VideoThumbnail    string
-		AudioWaveform     string
-		VideoDownloadLink string
-		AudioDownloadLink string
-	}{
-		UserName:          userName,
-		VideoThumbnail:    thumbnail,
-		AudioWaveform:     audioWaveform,
-		VideoDownloadLink: apiResponse.VideoURL,
-		AudioDownloadLink: apiResponse.AudioURL,
-	}
+	downloadFileURL := fmt.Sprintf(
+		"%s/api/files/%s/",
+		app.Settings().Meta.AppUrl,
+		record.BaseFilesPath(),
+	)
 
-	var htmlBuffer bytes.Buffer
+	record.Set("thumbnail", thumbnail)
+	record.Set("waveform", audioWaveform)
 
-	if err = t.Execute(&htmlBuffer, data); err != nil {
-		return
-	}
+	app.Dao().SaveRecord(record)
 
-	htmlString := htmlBuffer.String()
+	htmlString := strings.Replace(EMAIL_TEMPLATE, "{{ .UserName }}", userName, 1)
+	htmlString = strings.Replace(htmlString, "{{ .VideoThumbnail }}", downloadFileURL+thumbnail, 1)
+	htmlString = strings.Replace(htmlString, "{{ .AudioWaveform }}", downloadFileURL+audioWaveform, 1)
+	htmlString = strings.Replace(htmlString, "{{ .VideoDownloadLink }}", apiResponse.VideoURL, 1)
+	htmlString = strings.Replace(htmlString, "{{ .AudioDownloadLink }}", apiResponse.AudioURL, 1)
 
 	params := &resend.SendEmailRequest{
 		From:    "camb.ai <help@camb.ai>",
@@ -271,32 +232,13 @@ func (c *Camb) SendEmailTest(
 ) {
 	resendClient := resend.NewClient(c.ResendAPIKey)
 
-	t, err := template.New("webpage").Parse(EMAIL_TEMPLATE)
-	if err != nil {
-		return
-	}
+	htmlString := strings.Replace(EMAIL_TEMPLATE, "{{ .UserName }}", UserName, 1)
+	htmlString = strings.Replace(htmlString, "{{ .VideoThumbnail }}", VideoThumbnail, 1)
+	htmlString = strings.Replace(htmlString, "{{ .AudioWaveform }}", AudioWaveform, 1)
+	htmlString = strings.Replace(htmlString, "{{ .VideoDownloadLink }}", VideoDownloadLink, 1)
+	htmlString = strings.Replace(htmlString, "{{ .AudioDownloadLink }}", AudioDownloadLink, 1)
 
-	data := struct {
-		UserName          string
-		VideoThumbnail    string
-		AudioWaveform     string
-		VideoDownloadLink string
-		AudioDownloadLink string
-	}{
-		UserName:          UserName,
-		VideoThumbnail:    VideoThumbnail,
-		AudioWaveform:     AudioWaveform,
-		VideoDownloadLink: VideoDownloadLink,
-		AudioDownloadLink: AudioDownloadLink,
-	}
-
-	var htmlBuffer bytes.Buffer
-
-	if err = t.Execute(&htmlBuffer, data); err != nil {
-		return
-	}
-
-	htmlString := htmlBuffer.String()
+	fmt.Println(htmlString)
 
 	params := &resend.SendEmailRequest{
 		From:    "camb.ai <help@camb.ai>",
@@ -309,7 +251,7 @@ func (c *Camb) SendEmailTest(
 	// https://demo.react.email/preview/notifications/vercel-invite-user
 	// https://stackoverflow.com/questions/32254818/generating-a-waveform-using-ffmpeg
 
-	_, err = resendClient.Emails.Send(params)
+	_, err := resendClient.Emails.Send(params)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
