@@ -90,25 +90,21 @@ type RunInfoResponse struct {
 }
 
 func GenerateAudioWaveform(videoPath string) (string, error) {
-	tempFile, err := os.CreateTemp("", "output-*.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tempFile.Name()) // Clean up the temp file afterwards
+	outputPath := videoPath + "_waveform.png"
 
 	// Build the FFmpeg command
-	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-filter_complex", "showwavespic=s=500x500,scale=500:500:force_original_aspect_ratio=decrease,pad=500:500:(ow-iw)/2:(oh-ih)/2", "-frames:v", "1", tempFile.Name())
+	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-filter_complex", "showwavespic=s=500x500,scale=500:500:force_original_aspect_ratio=decrease,pad=500:500:(ow-iw)/2:(oh-ih)/2", "-frames:v", "1", outputPath)
 
 	// Run the FFmpeg command
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
 	}
 
 	// Read the generated image file
-	imageData, err := os.ReadFile(tempFile.Name())
+	imageData, err := os.ReadFile(outputPath)
 	if err != nil {
 		log.Fatal(err)
 		return "", nil
@@ -124,25 +120,21 @@ func GenerateAudioWaveform(videoPath string) (string, error) {
 }
 
 func GenerateVideoThumbnail(videoPath string) (string, error) {
-	tempFile, err := os.CreateTemp("", "output-*.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tempFile.Name()) // Clean up the temp file afterwards
+	outputPath := videoPath + "_thumbnail.png"
 
 	// Build the FFmpeg command
-	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-vf", "\"crop='min(iw,ih)':'min(iw,ih)',scale=500:500\"", "-frames:v", "1", tempFile.Name())
+	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-vf", "\"crop='min(iw,ih)':'min(iw,ih)',scale=500:500\"", "-frames:v", "1", outputPath)
 
 	// Run the FFmpeg command
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("FFmpeg command failed: %v, %s", err, stderr.String())
 	}
 
 	// Read the generated image file
-	imageData, err := os.ReadFile(tempFile.Name())
+	imageData, err := os.ReadFile(outputPath)
 	if err != nil {
 		log.Fatal(err)
 		return "", nil
