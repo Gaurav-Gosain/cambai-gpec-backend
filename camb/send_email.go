@@ -233,29 +233,35 @@ func (c *Camb) SendEmail(
 
 	app.Dao().SaveRecord(record)
 
-	downloadFile(apiResponse.VideoURL, downloadFileURL+"dubbed_video.mkv")
+	err = downloadFile(apiResponse.VideoURL, downloadFileURL+"dubbed_video.mkv")
+
+	fmt.Println(err.Error())
 
 	dubbedVideoPath := downloadVideoFileURL + "dubbed_video.mkv"
 	mp4FinalDubbedVideoPath := downloadVideoFileURL + "dubbed_video.mp4"
 
-	convertMKVtoMP4(dubbedVideoPath, mp4FinalDubbedVideoPath)
+	err = convertMKVtoMP4(dubbedVideoPath, mp4FinalDubbedVideoPath)
+
+	fmt.Println(err.Error())
 
 	record.Set("dubbed_video", "dubbed_video.mp4")
 	app.Dao().SaveRecord(record)
 
 	downloadMP4VideoURL := fmt.Sprintf(
-		"%s/api/files/%s/%s?download=1",
+		"%s/api/files/%s/%s",
 		// "%s/api/files/%s/%s?token=%s",
 		app.Settings().Meta.AppUrl,
 		record.BaseFilesPath(),
-		"output_video.mp4",
+		"dubbed_video.mp4",
 		// fileDownloadToken,
 	)
+
+	fmt.Println(downloadMP4VideoURL)
 
 	htmlString := strings.Replace(EMAIL_TEMPLATE, "{{ .UserName }}", userName, 1)
 	htmlString = strings.Replace(htmlString, "{{ .VideoThumbnail }}", downloadFileURL+thumbnail, 1)
 	htmlString = strings.Replace(htmlString, "{{ .AudioWaveform }}", downloadFileURL+audioWaveform, 1)
-	htmlString = strings.Replace(htmlString, "{{ .VideoDownloadLink }}", downloadMP4VideoURL, 1)
+	htmlString = strings.Replace(htmlString, "{{ .VideoDownloadLink }}", apiResponse.VideoURL, 1)
 	htmlString = strings.Replace(htmlString, "{{ .AudioDownloadLink }}", apiResponse.AudioURL, 1)
 
 	params := &resend.SendEmailRequest{
