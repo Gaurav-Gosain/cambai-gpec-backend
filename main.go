@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/gaurav-gosain/cambai-gpec-backend/camb"
 	_ "github.com/joho/godotenv/autoload"
@@ -35,59 +36,71 @@ func main() {
 
 		originalVideo := originalVideos[0]
 
-		originalVideoUrl := fmt.Sprintf("pb_data/storage/%s/%s/%s", e.Collection.Id, e.Record.Id, originalVideo.Name)
-
-		if _, err := os.Stat(originalVideoUrl); err != nil {
-			return err
-		}
-
-		var stdoutBuf, stderrBuf bytes.Buffer
-
-		outputPath := originalVideoUrl + ".mp4"
-		outputFileName := originalVideo.Name + ".mp4"
-		cmd := exec.Command(
-			"ffmpeg",
-			"-i", originalVideoUrl,
-
-			/*Failed attempts*/
-
-			// "-r", "30",
-
-			// "-map", "0",
-			// "-map", "0:a",
-			// "-map", "0:v",
-			// "-c", "copy",
-
-			/*****************/
-
-			"-c:v", "libx264",
-			"-c:a", "aac",
-			"-preset", "ultrafast",
-			"-crf", "28",
-
-			outputPath,
-		)
-		cmd.Stdout = &stdoutBuf
-		cmd.Stderr = &stderrBuf
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(stdoutBuf.String())
-			fmt.Println(stderrBuf.String())
-			return err
-		}
+		isMp4 := strings.HasSuffix(originalVideo.Name, ".mp4")
 
 		record := e.Record
-		record.Set("original_video", outputFileName)
 
-		err = app.Dao().SaveRecord(record)
-		if err != nil {
-			return err
-		}
+		outputFileName := originalVideo.Name
 
-		// delete the originalVideoUrl
-		err = os.Remove(originalVideoUrl)
-		if err != nil {
-			return err
+		if !isMp4 {
+
+			originalVideoUrl := fmt.Sprintf("pb_data/storage/%s/%s/%s",
+				e.Collection.Id,
+				e.Record.Id,
+				originalVideo.Name,
+			)
+
+			if _, err := os.Stat(originalVideoUrl); err != nil {
+				return err
+			}
+
+			var stdoutBuf, stderrBuf bytes.Buffer
+
+			outputPath := originalVideoUrl + ".mp4"
+			outputFileName = originalVideo.Name + ".mp4"
+			cmd := exec.Command(
+				"ffmpeg",
+				"-i", originalVideoUrl,
+
+				/*Failed attempts*/
+
+				// "-r", "30",
+
+				// "-map", "0",
+				// "-map", "0:a",
+				// "-map", "0:v",
+				// "-c", "copy",
+
+				/*****************/
+
+				"-c:v", "libx264",
+				"-c:a", "aac",
+				"-preset", "ultrafast",
+				"-crf", "28",
+
+				outputPath,
+			)
+			cmd.Stdout = &stdoutBuf
+			cmd.Stderr = &stderrBuf
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(stdoutBuf.String())
+				fmt.Println(stderrBuf.String())
+				return err
+			}
+
+			record.Set("original_video", outputFileName)
+
+			err = app.Dao().SaveRecord(record)
+			if err != nil {
+				return err
+			}
+
+			// delete the originalVideoUrl
+			err = os.Remove(originalVideoUrl)
+			if err != nil {
+				return err
+			}
 		}
 
 		// expand the "user" relation
