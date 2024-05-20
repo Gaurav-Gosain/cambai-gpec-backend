@@ -103,12 +103,12 @@ func main() {
 			}
 		}
 
-		// expand the "user" relation
-		if errs := app.Dao().ExpandRecord(record, []string{"user"}, nil); len(errs) > 0 {
-			return fmt.Errorf("failed to expand: %v", errs)
-		}
-
-		userRecord := record.ExpandedOne("user")
+		// // expand the "user" relation
+		// if errs := app.Dao().ExpandRecord(record, []string{"user"}, nil); len(errs) > 0 {
+		// 	return fmt.Errorf("failed to expand: %v", errs)
+		// }
+		//
+		// userRecord := record.ExpandedOne("user")
 
 		// fileDownloadToken, err := tokens.NewRecordFileToken(app, userRecord)
 		// if err != nil {
@@ -129,8 +129,8 @@ func main() {
 		go cambApi.StartDubbingPipeline(
 			app,
 			record,
-			userRecord.GetString("email"),
-			userRecord.GetString("name"),
+			record.GetString("email"),
+			record.GetString("name"),
 			downloadFileURL,
 		)
 
