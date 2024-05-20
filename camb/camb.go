@@ -77,7 +77,5 @@ func (c *Camb) StartDubbingPipeline(
 		time.Sleep(1 * time.Second)
 	}
 
-	app.Dao().SaveRecord(record)
-
 	c.SendEmail(app, email, statusResp, record, userName)
 }
