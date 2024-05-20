@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -121,45 +120,6 @@ func GenerateVideoThumbnail(videoPath string) (string, error) {
 	return parts[len(parts)-1], nil
 }
 
-// downloadFile downloads a file from the given URL and saves it to the specified file path
-func downloadFile(url string, filePath string) error {
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Create the file
-	out, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Write the data to the file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// convertMKVtoMP4 converts a video from MKV to MP4 format using FFmpeg
-func convertMKVtoMP4(inputFile, outputFile string) error {
-	// Construct the FFmpeg command
-	cmd := exec.Command("ffmpeg", "-y", "-i", inputFile, "-c", "copy", outputFile)
-
-	// Run the command and capture any errors
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("FFmpeg command failed: %v", err)
-	}
-
-	return nil
-}
-
 // Sends an email to the user with the download links for the dubbed video
 func (c *Camb) SendEmail(
 	app *pocketbase.PocketBase,
@@ -225,38 +185,7 @@ func (c *Camb) SendEmail(
 	record.Set("thumbnail", thumbnail)
 	record.Set("waveform", audioWaveform)
 
-	// downloadVideoFileURL := fmt.Sprintf(
-	// 	"%s/api/files/%s/",
-	// 	app.Settings().Meta.AppUrl,
-	// 	record.BaseFilesPath(),
-	// )
-
 	app.Dao().SaveRecord(record)
-
-	// err = downloadFile(apiResponse.VideoURL, downloadFileURL+"dubbed_video.mkv")
-	//
-	// fmt.Println(err.Error())
-	//
-	// dubbedVideoPath := downloadVideoFileURL + "dubbed_video.mkv"
-	// mp4FinalDubbedVideoPath := downloadVideoFileURL + "dubbed_video.mp4"
-	//
-	// err = convertMKVtoMP4(dubbedVideoPath, mp4FinalDubbedVideoPath)
-	//
-	// fmt.Println(err.Error())
-	//
-	// record.Set("dubbed_video", "dubbed_video.mp4")
-	// app.Dao().SaveRecord(record)
-	//
-	// downloadMP4VideoURL := fmt.Sprintf(
-	// 	"%s/api/files/%s/%s",
-	// 	// "%s/api/files/%s/%s?token=%s",
-	// 	app.Settings().Meta.AppUrl,
-	// 	record.BaseFilesPath(),
-	// 	"dubbed_video.mp4",
-	// 	// fileDownloadToken,
-	// )
-
-	// fmt.Println(downloadMP4VideoURL)
 
 	htmlString := strings.Replace(EMAIL_TEMPLATE, "{{ .UserName }}", userName, 1)
 	htmlString = strings.Replace(htmlString, "{{ .VideoThumbnail }}", downloadFileURL+thumbnail, 1)
