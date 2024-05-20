@@ -225,38 +225,38 @@ func (c *Camb) SendEmail(
 	record.Set("thumbnail", thumbnail)
 	record.Set("waveform", audioWaveform)
 
-	downloadVideoFileURL := fmt.Sprintf(
-		"%s/api/files/%s/",
-		app.Settings().Meta.AppUrl,
-		record.BaseFilesPath(),
-	)
+	// downloadVideoFileURL := fmt.Sprintf(
+	// 	"%s/api/files/%s/",
+	// 	app.Settings().Meta.AppUrl,
+	// 	record.BaseFilesPath(),
+	// )
 
 	app.Dao().SaveRecord(record)
 
-	err = downloadFile(apiResponse.VideoURL, downloadFileURL+"dubbed_video.mkv")
+	// err = downloadFile(apiResponse.VideoURL, downloadFileURL+"dubbed_video.mkv")
+	//
+	// fmt.Println(err.Error())
+	//
+	// dubbedVideoPath := downloadVideoFileURL + "dubbed_video.mkv"
+	// mp4FinalDubbedVideoPath := downloadVideoFileURL + "dubbed_video.mp4"
+	//
+	// err = convertMKVtoMP4(dubbedVideoPath, mp4FinalDubbedVideoPath)
+	//
+	// fmt.Println(err.Error())
+	//
+	// record.Set("dubbed_video", "dubbed_video.mp4")
+	// app.Dao().SaveRecord(record)
+	//
+	// downloadMP4VideoURL := fmt.Sprintf(
+	// 	"%s/api/files/%s/%s",
+	// 	// "%s/api/files/%s/%s?token=%s",
+	// 	app.Settings().Meta.AppUrl,
+	// 	record.BaseFilesPath(),
+	// 	"dubbed_video.mp4",
+	// 	// fileDownloadToken,
+	// )
 
-	fmt.Println(err.Error())
-
-	dubbedVideoPath := downloadVideoFileURL + "dubbed_video.mkv"
-	mp4FinalDubbedVideoPath := downloadVideoFileURL + "dubbed_video.mp4"
-
-	err = convertMKVtoMP4(dubbedVideoPath, mp4FinalDubbedVideoPath)
-
-	fmt.Println(err.Error())
-
-	record.Set("dubbed_video", "dubbed_video.mp4")
-	app.Dao().SaveRecord(record)
-
-	downloadMP4VideoURL := fmt.Sprintf(
-		"%s/api/files/%s/%s",
-		// "%s/api/files/%s/%s?token=%s",
-		app.Settings().Meta.AppUrl,
-		record.BaseFilesPath(),
-		"dubbed_video.mp4",
-		// fileDownloadToken,
-	)
-
-	fmt.Println(downloadMP4VideoURL)
+	// fmt.Println(downloadMP4VideoURL)
 
 	htmlString := strings.Replace(EMAIL_TEMPLATE, "{{ .UserName }}", userName, 1)
 	htmlString = strings.Replace(htmlString, "{{ .VideoThumbnail }}", downloadFileURL+thumbnail, 1)
